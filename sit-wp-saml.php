@@ -1,4 +1,14 @@
 <?php
+
+// Make sure we don't expose any info if called directly
+if ( !function_exists( "add_action" ) ) {
+    echo "Hi there!  I'm just a plugin, not much I can do when called directly.";
+    exit;
+}
+
+//Define Dirpath for hooks
+define( "DIR_PATH", plugin_dir_path( __FILE__ ) );
+
 /**
  * Plugin Name: SIT WP SAML
  * Description:
@@ -6,40 +16,49 @@
  * Author: SIT:Jaroslav Dvořák
  **/
 
-// Make sure we don't expose any info if called directly
-if ( !function_exists( "add_action" ) ) {
-	echo "Hi there!  I'm just a plugin, not much I can do when called directly.";
-	exit;
-}
-
 require_once( __DIR__ . "/../../../../vendor/autoload.php" );
 
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Settings;
 
-add_action( "init", "saml_sso", 1 );
+if ( ! class_exists( "SitWpSaml" ) ) {
 
-function saml_sso( $backlink ) {
+    class SitWpSaml {
 
-	// Je SAML zapnuty?
+        public function __construct() {
 
-	//
-	if ( is_user_logged_in() ) {
-		return true;
-	}
+            add_action( "init", $this->saml_sso(), 1 );
 
-	$settings = "";
+        }
 
-	$auth = false;
+        public function saml_sso( string $backlink = "" ):bool {
 
-	//$auth = new Auth( $settings );
+            // Je SAML zapnuty?
 
-	if ( $auth === false ) {
-		//wp_redirect(home_url());
-		//exit();
-	}
+            //
+            if ( is_user_logged_in() ) {
+                return true;
+            }
 
-	$auth->login( $backlink );
+            $settings = "";
 
-	return false;
+            $auth = false;
+
+            //$auth = new Auth( $settings );
+
+            if ( $auth === false ) {
+                //wp_redirect(home_url());
+                //exit();
+            }
+
+            $auth->login( $backlink );
+
+            return false;
+        }
+
+    }
+
+    // instantiate the plugin class
+    $sit_wp_saml = new SitWpSaml();
+
 }
